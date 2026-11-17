@@ -31,6 +31,17 @@ def generate_karaoke_and_acapella(input_path, output_instrumental, output_acapel
     sf.write(output_instrumental, instrumental_filtered, sr)
     print(f"Instrumentalul a fost salvat cu succes in fisierul: {output_instrumental}")
 
+    #Generarea fisierului voce (ACAPELLA)
+
+    print("Se proceseaza versiunea acapella ...")
+
+    center_channel = 0.5 * (left_channel + right_channel)
+
+    sos_vocal_hp = butter(N=3, Wn=120.0, btype='highpass', fs=sr, output='sos')
+    center_clean = sosfilt(sos_vocal_hp, center_channel)
+    
+
+
 if __name__ == "__main__":
     input_file = "Iris.mp3"
     out_inst = "instrumental_karaoke.wav"
