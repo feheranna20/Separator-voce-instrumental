@@ -39,15 +39,39 @@ def generate_karaoke_and_acapella(input_path, output_instrumental, output_acapel
 
     sos_vocal_hp = butter(N=3, Wn=120.0, btype='highpass', fs=sr, output='sos')
     center_clean = sosfilt(sos_vocal_hp, center_channel)
-    
+
+
+    D = librosa.stft(center_clean, n_fft=2048, hop_length=512)
+    magnitude, phase = librosa.magphase(D)
+
+    background = librosa.decompose.nn_filter(magnitude, aggregate=np.median, metric='cosine', axis=1)
+
+    epsilon=1e-8
+    mask=(magnitude ** 2) / ((magnitude ** 2) + (1.6 * background ** 2) + epsilon)
+
+    clean_magnitude=magnitude * mask
+
+    D_vocal = clean_magnitude * phase
+    acapella_raw = librosa.istft(D_vocal, hop_length=512, length=len(center_clean))
+
+    sos_bp = butter(N=4, Wn=[150.0, 3800.0], btype='bandpass', fs=sr, output='sos')
+    acapella_filtered = sosfilt(sos_bp, acapella_raw)
+
+    max_acap = np.max(np.abs(acapella_filtered))
+    if max_acap > 0:
+        acapella_filtered = acapella_filtered / max_acap
+        
+    sf.write(output_acapella, acapella_filtered, sr)
+    print(f"Partea acapella a fost salvata cu succes in fisierul: {output_acapella}")
 
 
 if __name__ == "__main__":
     input_file = "Iris.mp3"
     out_inst = "instrumental_karaoke.wav"
+    out_acap = "acapella_voce.wav"
 
     try:
-        generate_karaoke_and_acapella(input_file, out_inst)
+        generate_karaoke_and_acapella(input_file, out_inst, out_acap)
         print("Ambele fisiere au fost create cu succes!")
     except Exception as e:
         print(f"A aparut o eroare: {e}")
