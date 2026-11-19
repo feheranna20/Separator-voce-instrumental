@@ -21,7 +21,7 @@ def generate_karaoke_and_acapella(input_path, output_instrumental, output_acapel
     instrumental_raw = left_channel - right_channel
     y_harmonic_i, y_percussive_i = librosa.effects.hpss(instrumental_raw, margin=1.5)
 
-    sos_hp_inst = butter(N=2, Wn=70.0, btype='hightpass', fs=sr, output='sos')
+    sos_hp_inst = butter(N=2, Wn=70.0, btype='highpass', fs=sr, output='sos')
     instrumental_filtered = sosfilt(sos_hp_inst, y_harmonic_i) + y_percussive_i
 
     max_inst = np.max(np.abs(instrumental_filtered))
